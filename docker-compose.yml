@@ -1,0 +1,13 @@
+# Starts the three independently runnable app stacks together.
+# Before the first run, create the shared cross-stack network once:
+#   docker network create devnet
+name: todo-platform
+
+include:
+  - path: ./apps/auth/docker-compose.yml
+  - path: ./apps/api/docker-compose.yml
+  - path: ./apps/web/docker-compose.yml
+
+networks:
+  devnet:
+    external: true

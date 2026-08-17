@@ -1,0 +1,50 @@
+name: todo-auth
+
+services:
+  auth:
+    build: .
+    ports:
+      - "4001:4001"
+    environment:
+      DATABASE_URL: postgresql://authuser:authpassword@auth-db:5432/authdb
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    networks:
+      - auth-private
+      - devnet
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://localhost:4001/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  auth-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: authuser
+      POSTGRES_PASSWORD: authpassword
+      POSTGRES_DB: authdb
+    volumes:
+      - auth_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authuser -d authdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    networks:
+      - auth-private
+
+volumes:
+  auth_pgdata:
+
+networks:
+  auth-private:
+    internal: true
+  devnet:
+    external: true
