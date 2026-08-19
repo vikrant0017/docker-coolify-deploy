@@ -1,15 +1,19 @@
-# todo-api-service
+# TODO API service
 
-To install dependencies:
+This is the Bun API service for the Docker TODO demo. It owns TODO CRUD operations and its PostgreSQL database.
 
-```bash
-bun install
+For the complete beginner-focused Docker explanation—including development Watch mode, manual backend restarts, production image stages, databases, networks, Caddy, and deployment limitations—read the repository guide:
+
+[`../../docs/docker-guide.md`](../../docs/docker-guide.md)
+
+## Useful local commands
+
+```sh
+bun run check
+docker compose up --build
+bun run docker:watch
+bun run docker:restart
+bun run docker:logs
 ```
 
-To run:
-
-```bash
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v1.3.14. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+Run the root platform Compose wrapper when you need API to connect to the auth service and want the full browser flow.

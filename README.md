@@ -1,73 +1,73 @@
 # Docker TODO demo
 
-A small multi-repository-style TODO platform for learning Docker Compose, Bun, PostgreSQL, and Docker networks.
+A small TODO platform built to learn **Docker development and deployment workflows**.
 
-```text
-Browser → web (Vite) → api (Bun) → auth (Bun)
-                         ↓            ↓
-                    api-db       auth-db
-                    PostgreSQL   PostgreSQL
-```
+> Start with the beginner guide: [`docs/docker-guide.md`](docs/docker-guide.md). It explains what each Docker file does and, more importantly, why the project uses separate development and production configurations.
 
-Each folder below `apps/` represents an independently runnable repository with its own `docker-compose.yml`:
-
-- `apps/web` — Vite UI
-- `apps/api` — TODO API and its private PostgreSQL database
-- `apps/auth` — login service and its private PostgreSQL database
-
-The API and auth services share `devnet`, but each PostgreSQL database remains on the private default network of its own stack.
-
-## Run all stacks together
-
-Create the shared Docker network once per machine:
-
-```sh
-docker network create devnet
-```
-
-Then, from this repository root:
+## Quick start: development
 
 ```sh
 docker compose up --build
 ```
 
-The root `docker-compose.yml` is a platform wrapper that includes the three child-stack Compose files; it does not duplicate their service definitions.
-
-Open <http://localhost:5173> and log in with:
+Open <http://localhost:5173> and sign in with:
 
 ```text
 Username: demo
 Password: demo123
 ```
 
-The auth service seeds this user into `auth-db` during startup. TODOs are persisted in `api-db`, so they survive API container restarts.
-
-## Run one stack independently
-
-All stacks still require the one-time `devnet` setup above. Start them from their own directories:
+For active development with source-file sync:
 
 ```sh
-cd apps/auth && docker compose up --build
-cd apps/api && docker compose up --build
-cd apps/web && docker compose up --build
+docker compose watch
 ```
 
-For the normal application flow, run all three stacks. The API reaches the auth service by its `devnet` service name, `http://auth:4001`.
+- Vite hot-reloads UI changes.
+- API/auth changes sync into containers but do not automatically restart. After completing a backend change, restart its container:
 
-## Ports
+```sh
+bun run --cwd apps/api docker:restart
+bun run --cwd apps/auth docker:restart
+```
 
-| Service | URL |
-| --- | --- |
-| Web | <http://localhost:5173> |
-| API | <http://localhost:4000> |
-| Auth | <http://localhost:4001> |
-
-The PostgreSQL containers intentionally do not publish host ports. Cross-stack service traffic uses Docker DNS on `devnet`, never `localhost`.
-
-Stop the full platform with:
+Stop the development stack:
 
 ```sh
 docker compose down
 ```
 
-Add `-v` to remove the database volumes and reset both the seeded auth database and saved TODOs.
+## Quick start: production-like run
+
+This launches immutable production images locally. It intentionally uses port `8080`, leaving the development stack’s port `5173` distinct.
+
+```sh
+cp .env.production.example .env
+# Edit .env and replace both database password values.
+docker compose -f docker-compose.prod.yml up --build -d
+```
+
+Open <http://localhost:8080>. Stop it with:
+
+```sh
+docker compose -f docker-compose.prod.yml down
+```
+
+`docker-compose.prod.yml` is production-like, not a complete internet-facing production deployment. Review the guide before deploying it to a server.
+
+## Architecture
+
+```text
+Browser → Caddy / Vite UI → API (Bun) → Auth (Bun)
+                              ↓           ↓
+                           api-db       auth-db
+                          PostgreSQL   PostgreSQL
+```
+
+Each folder under `apps/` is intentionally shaped like its own repository:
+
+- `apps/web` — Vite UI in development; Caddy static site and API proxy in production
+- `apps/api` — TODO API and its PostgreSQL database
+- `apps/auth` — login service and its PostgreSQL database
+
+The root Compose files are platform wrappers that include those child stacks. The development and production wrappers each create their own shared network automatically; no manual `docker network create` command is needed.

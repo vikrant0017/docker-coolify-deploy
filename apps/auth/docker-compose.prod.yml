@@ -1,54 +1,42 @@
-name: todo-auth
+name: todo-auth-prod
 
 services:
   auth:
     build:
       context: .
-      target: dev
-    ports:
-      - "4001:4001"
+      target: prod
     environment:
-      DATABASE_URL: postgresql://authuser:authpassword@auth-db:5432/authdb
+      DATABASE_URL: postgresql://authuser:${AUTH_DB_PASSWORD:?Set AUTH_DB_PASSWORD}@auth-db:5432/authdb
     depends_on:
       auth-db:
         condition: service_healthy
     networks:
       - auth-private
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "bun", "-e", "fetch('http://localhost:4001/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
-      interval: 5s
+      interval: 10s
       timeout: 3s
-      retries: 10
-      start_period: 5s
-    develop:
-      watch:
-        - action: sync
-          path: .
-          target: /app
-          ignore:
-            - node_modules/
-            - .git/
-        - action: rebuild
-          path: package.json
-        - action: rebuild
-          path: bun.lock
+      retries: 5
+      start_period: 10s
 
   auth-db:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: authuser
-      POSTGRES_PASSWORD: authpassword
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD:?Set AUTH_DB_PASSWORD}
       POSTGRES_DB: authdb
     volumes:
       - auth_pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U authuser -d authdb"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
-      retries: 10
-      start_period: 5s
+      retries: 5
+      start_period: 20s
     networks:
       - auth-private
+    restart: unless-stopped
 
 volumes:
   auth_pgdata:

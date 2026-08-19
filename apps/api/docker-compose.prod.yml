@@ -1,56 +1,44 @@
-name: todo-api
+name: todo-api-prod
 
 services:
   api:
     build:
       context: .
-      target: dev
-    ports:
-      - "4000:4000"
+      target: prod
     environment:
-      DATABASE_URL: postgresql://apiuser:apipassword@api-db:5432/apidb
+      DATABASE_URL: postgresql://apiuser:${API_DB_PASSWORD:?Set API_DB_PASSWORD}@api-db:5432/apidb
       AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:-http://auth:4001}
-      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:5173}
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:8080}
     depends_on:
       api-db:
         condition: service_healthy
     networks:
       - api-private
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "bun", "-e", "fetch('http://localhost:4000/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
-      interval: 5s
+      interval: 10s
       timeout: 3s
-      retries: 10
-      start_period: 5s
-    develop:
-      watch:
-        - action: sync
-          path: .
-          target: /app
-          ignore:
-            - node_modules/
-            - .git/
-        - action: rebuild
-          path: package.json
-        - action: rebuild
-          path: bun.lock
+      retries: 5
+      start_period: 10s
 
   api-db:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: apiuser
-      POSTGRES_PASSWORD: apipassword
+      POSTGRES_PASSWORD: ${API_DB_PASSWORD:?Set API_DB_PASSWORD}
       POSTGRES_DB: apidb
     volumes:
       - api_pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U apiuser -d apidb"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
-      retries: 10
-      start_period: 5s
+      retries: 5
+      start_period: 20s
     networks:
       - api-private
+    restart: unless-stopped
 
 volumes:
   api_pgdata:

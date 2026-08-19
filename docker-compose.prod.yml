@@ -1,0 +1,26 @@
+# Production-like platform wrapper. It includes immutable child production stacks.
+name: todo-platform-prod
+
+include:
+  - path: ./apps/auth/docker-compose.prod.yml
+  - path: ./apps/api/docker-compose.prod.yml
+  - path: ./apps/web/docker-compose.prod.yml
+
+services:
+  auth:
+    networks:
+      - auth-private
+      - platform-net
+  api:
+    networks:
+      - api-private
+      - platform-net
+  web:
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - platform-net
+
+networks:
+  platform-net:

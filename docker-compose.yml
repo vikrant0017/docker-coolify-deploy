@@ -1,6 +1,5 @@
-# Starts the three independently runnable app stacks together.
-# Before the first run, create the shared cross-stack network once:
-#   docker network create devnet
+# Platform wrapper: starts the three independently defined app stacks.
+# This Compose project creates and removes its own shared network automatically.
 name: todo-platform
 
 include:
@@ -8,6 +7,18 @@ include:
   - path: ./apps/api/docker-compose.yml
   - path: ./apps/web/docker-compose.yml
 
+services:
+  auth:
+    networks:
+      - auth-private
+      - devnet
+  api:
+    networks:
+      - api-private
+      - devnet
+  web:
+    networks:
+      - devnet
+
 networks:
   devnet:
-    external: true
