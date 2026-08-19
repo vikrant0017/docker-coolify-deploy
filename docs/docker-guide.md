@@ -356,7 +356,7 @@ The Caddyfile has two jobs:
 
 ```caddyfile
 handle_path /api/* {
-  reverse_proxy api:4000
+  reverse_proxy {$API_UPSTREAM:http://api:4000}
 }
 
 handle {
@@ -383,7 +383,7 @@ When the browser calls `/api/login`:
 browser → Caddy :8080 → API :4000 → auth :4001
 ```
 
-`handle_path` removes the `/api` prefix, so API receives `/login`, which matches its routes.
+`handle_path` removes the `/api` prefix, so API receives `/login`, which matches its routes. `API_UPSTREAM` defaults to `http://api:4000` for the local platform wrapper. The standalone Coolify web deployment sets it to the separately deployed API resource’s hostname instead.
 
 **Why proxy instead of exposing API port 4000?** The browser sees one public origin. API/auth/database traffic stays internal. This reduces exposed ports and makes a future HTTPS/domain setup simpler.
 

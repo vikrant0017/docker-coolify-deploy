@@ -2,7 +2,7 @@
   root * /usr/share/caddy
 
   handle_path /api/* {
-    reverse_proxy api:4000
+    reverse_proxy {$API_UPSTREAM:http://api:4000}
   }
 
   handle {

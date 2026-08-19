@@ -1,0 +1,15 @@
+# Deploy this file as the standalone web Docker Compose application in Coolify.
+name: todo-web
+
+services:
+  web:
+    build:
+      context: .
+      target: prod
+    environment:
+      # Set to the API resource's hostname on Coolify's predefined network,
+      # for example http://api-<resource-uuid>:4000.
+      API_UPSTREAM: ${API_UPSTREAM:?Set API_UPSTREAM to the API service URL}
+    expose:
+      - "80"
+    restart: unless-stopped

@@ -1,0 +1,45 @@
+# Deploy this file as the standalone API Docker Compose application in Coolify.
+name: todo-api
+
+services:
+  api:
+    build:
+      context: .
+      target: prod
+    environment:
+      DATABASE_URL: postgresql://apiuser:${SERVICE_PASSWORD_API_DB}@api-db:5432/apidb
+      # Set to the auth resource's hostname on Coolify's predefined network,
+      # for example http://auth-<resource-uuid>:4001.
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:?Set AUTH_SERVICE_URL to the auth service URL}
+      WEB_ORIGIN: ${WEB_ORIGIN:?Set WEB_ORIGIN to the public web origin}
+    expose:
+      - "4000"
+    depends_on:
+      api-db:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://localhost:4000/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  api-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: apiuser
+      POSTGRES_PASSWORD: ${SERVICE_PASSWORD_API_DB}
+      POSTGRES_DB: apidb
+    volumes:
+      - api_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U apiuser -d apidb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+volumes:
+  api_pgdata:

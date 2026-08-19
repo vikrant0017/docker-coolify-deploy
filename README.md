@@ -55,6 +55,30 @@ docker compose -f docker-compose.prod.yml down
 
 `docker-compose.prod.yml` is production-like, not a complete internet-facing production deployment. Review the guide before deploying it to a server.
 
+## Deploy separate services with Coolify
+
+Deploy these three **Docker Compose** applications from the repository. Each resource manages its own database and persistent named volume:
+
+| Coolify resource | Compose file | Public domain |
+| --- | --- | --- |
+| Auth | `apps/auth/docker-compose.coolify.yml` | None |
+| API | `apps/api/docker-compose.coolify.yml` | None |
+| Web | `apps/web/docker-compose.coolify.yml` | Your production domain on container port `80` |
+
+Deploy auth first, then API, then web. Enable **Connect to Predefined Network** on all three resources so Coolify can attach them to a shared network. Coolify suffixes service names on that network with each resource UUID; use the displayed resource UUIDs to set these required environment variables:
+
+| Resource | Variable | Example value |
+| --- | --- | --- |
+| API | `AUTH_SERVICE_URL` | `http://auth-<auth-resource-uuid>:4001` |
+| API | `WEB_ORIGIN` | `https://todo.example.com` |
+| Web | `API_UPSTREAM` | `http://api-<api-resource-uuid>:4000` |
+
+Assign `https://todo.example.com` to the web resource in its **Domains** setting, then use that exact origin for `WEB_ORIGIN`. Coolify’s proxy terminates TLS; the API, auth service, and databases do not receive domains or host-port mappings.
+
+Coolify generates `SERVICE_PASSWORD_API_DB` and `SERVICE_PASSWORD_AUTH_DB` for the database credentials. The `api_pgdata` and `auth_pgdata` named volumes preserve data across redeployments.
+
+> Coolify magic environment variables in these manifests require Coolify v4.0.0-beta.411 or newer when deploying from a Git source.
+
 ## Architecture
 
 ```text
