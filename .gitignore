@@ -1,4 +1,6 @@
 .env
 .env.*
 !.env.production.example
+!.env.example
+!.env.coolify.example
 docker-templates

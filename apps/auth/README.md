@@ -6,6 +6,16 @@ For the complete beginner-focused Docker explanation—including development Wat
 
 [`../../docs/docker-guide.md`](../../docs/docker-guide.md)
 
+## Configuration
+
+For a standalone local run, create a local environment file:
+
+```sh
+cp .env.example .env
+```
+
+Replace `AUTH_DB_PASSWORD` with a strong, unique value before using `docker-compose.prod.yml`. For Coolify, use [`.env.coolify.example`](.env.coolify.example) as the values to enter in Coolify; its `AUTH_DB_PASSWORD` is required.
+
 ## Useful local commands
 
 ```sh

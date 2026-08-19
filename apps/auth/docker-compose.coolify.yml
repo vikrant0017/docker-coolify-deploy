@@ -7,9 +7,14 @@ services:
       context: .
       target: prod
     environment:
-      DATABASE_URL: postgresql://authuser:${SERVICE_PASSWORD_AUTH_DB}@auth-db:5432/authdb
+      DATABASE_URL: postgresql://authuser:${AUTH_DB_PASSWORD:?Set AUTH_DB_PASSWORD}@auth-db:5432/authdb
     expose:
       - "4001"
+    networks:
+      default:
+      coolify:
+        aliases:
+          - todo-auth
     depends_on:
       auth-db:
         condition: service_healthy
@@ -25,7 +30,7 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: authuser
-      POSTGRES_PASSWORD: ${SERVICE_PASSWORD_AUTH_DB}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD:?Set AUTH_DB_PASSWORD}
       POSTGRES_DB: authdb
     volumes:
       - auth_pgdata:/var/lib/postgresql/data
@@ -35,7 +40,14 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+    networks:
+      - default
     restart: unless-stopped
 
 volumes:
   auth_pgdata:
+
+networks:
+  # Created by the Coolify proxy installation; do not let Compose create it.
+  coolify:
+    external: true

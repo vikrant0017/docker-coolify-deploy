@@ -7,9 +7,16 @@ services:
       context: .
       target: prod
     environment:
-      # Set to the API resource's hostname on Coolify's predefined network,
-      # for example http://api-<resource-uuid>:4000.
-      API_UPSTREAM: ${API_UPSTREAM:?Set API_UPSTREAM to the API service URL}
+      # `todo-api` is the API service's explicit alias on the external
+      # Coolify proxy network declared below.
+      API_UPSTREAM: ${API_UPSTREAM:-http://todo-api:4000}
     expose:
       - "80"
+    networks:
+      - coolify
     restart: unless-stopped
+
+networks:
+  # Created by the Coolify proxy installation; do not let Compose create it.
+  coolify:
+    external: true

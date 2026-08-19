@@ -29,6 +29,8 @@ build
 # Environment variables
 .env
 .env.*
+!.env.example
+!.env.coolify.example
 
 # Vite
 vite.config.ts.timestamp-*

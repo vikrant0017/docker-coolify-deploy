@@ -6,6 +6,16 @@ For the complete beginner-focused Docker explanation—including development Wat
 
 [`../../docs/docker-guide.md`](../../docs/docker-guide.md)
 
+## Configuration
+
+For a standalone local run, create a local environment file:
+
+```sh
+cp .env.example .env
+```
+
+The defaults support development. Before using `docker-compose.prod.yml`, replace `API_DB_PASSWORD` and set `WEB_ORIGIN` to `http://localhost:8080` (or your deployed web origin). For the separate Coolify deployment, use [`.env.coolify.example`](.env.coolify.example) as the values to enter in Coolify and replace `API_DB_PASSWORD`. Auth is reached at the stable `todo-auth` alias on the external `coolify` Docker network. `WEB_ORIGIN` is optional there because Caddy proxies browser `/api` traffic as the same origin.
+
 ## Useful local commands
 
 ```sh

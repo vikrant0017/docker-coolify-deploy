@@ -6,6 +6,16 @@ For the complete beginner-focused Docker explanation—including Compose Watch, 
 
 [`../../docs/docker-guide.md`](../../docs/docker-guide.md)
 
+## Configuration
+
+For a standalone local run, create a local environment file:
+
+```sh
+cp .env.example .env
+```
+
+`VITE_API_URL` is for local Vite development and `WEB_PORT` is used by `docker-compose.prod.yml`. For the separate Coolify deployment, use [`.env.coolify.example`](.env.coolify.example) as the values to enter in Coolify. API is reached at the stable `todo-api` alias on the external `coolify` Docker network.
+
 ## Useful local commands
 
 ```sh

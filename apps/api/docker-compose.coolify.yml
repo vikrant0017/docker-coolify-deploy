@@ -7,13 +7,20 @@ services:
       context: .
       target: prod
     environment:
-      DATABASE_URL: postgresql://apiuser:${SERVICE_PASSWORD_API_DB}@api-db:5432/apidb
-      # Set to the auth resource's hostname on Coolify's predefined network,
-      # for example http://auth-<resource-uuid>:4001.
-      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:?Set AUTH_SERVICE_URL to the auth service URL}
-      WEB_ORIGIN: ${WEB_ORIGIN:?Set WEB_ORIGIN to the public web origin}
+      DATABASE_URL: postgresql://apiuser:${API_DB_PASSWORD:?Set API_DB_PASSWORD}@api-db:5432/apidb
+      # `todo-auth` is the auth service's explicit alias on the external
+      # Coolify proxy network declared below.
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:-http://todo-auth:4001}
+      # Web calls /api through Caddy, so normal Coolify traffic is same-origin.
+      # Set this only if the API will be called directly from a browser origin.
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost}
     expose:
       - "4000"
+    networks:
+      default:
+      coolify:
+        aliases:
+          - todo-api
     depends_on:
       api-db:
         condition: service_healthy
@@ -29,7 +36,7 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: apiuser
-      POSTGRES_PASSWORD: ${SERVICE_PASSWORD_API_DB}
+      POSTGRES_PASSWORD: ${API_DB_PASSWORD:?Set API_DB_PASSWORD}
       POSTGRES_DB: apidb
     volumes:
       - api_pgdata:/var/lib/postgresql/data
@@ -39,7 +46,14 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+    networks:
+      - default
     restart: unless-stopped
 
 volumes:
   api_pgdata:
+
+networks:
+  # Created by the Coolify proxy installation; do not let Compose create it.
+  coolify:
+    external: true

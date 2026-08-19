@@ -383,7 +383,7 @@ When the browser calls `/api/login`:
 browser → Caddy :8080 → API :4000 → auth :4001
 ```
 
-`handle_path` removes the `/api` prefix, so API receives `/login`, which matches its routes. `API_UPSTREAM` defaults to `http://api:4000` for the local platform wrapper. The standalone Coolify web deployment sets it to the separately deployed API resource’s hostname instead.
+`handle_path` removes the `/api` prefix, so API receives `/login`, which matches its routes. `API_UPSTREAM` defaults to `http://api:4000` for the local platform wrapper. The standalone Coolify web deployment attaches its services to the external `coolify` Docker network and uses the API’s stable `todo-api` alias instead.
 
 **Why proxy instead of exposing API port 4000?** The browser sees one public origin. API/auth/database traffic stays internal. This reduces exposed ports and makes a future HTTPS/domain setup simpler.
 

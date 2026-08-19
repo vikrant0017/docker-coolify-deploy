@@ -65,19 +65,19 @@ Deploy these three **Docker Compose** applications from the repository. Each res
 | API | `apps/api/docker-compose.coolify.yml` | None |
 | Web | `apps/web/docker-compose.coolify.yml` | Your production domain on container port `80` |
 
-Deploy auth first, then API, then web. Enable **Connect to Predefined Network** on all three resources so Coolify can attach them to a shared network. Coolify suffixes service names on that network with each resource UUID; use the displayed resource UUIDs to set these required environment variables:
+Deploy auth first, then API, then web. The Coolify manifests explicitly attach only `web`, `api`, and `auth` to the external Docker network named `coolify`, which is created by Coolify’s proxy installation. They use stable aliases on that network, so do not rely on the **Connect to Predefined Network** toggle or UUID-suffixed hostnames.
 
 | Resource | Variable | Example value |
 | --- | --- | --- |
-| API | `AUTH_SERVICE_URL` | `http://auth-<auth-resource-uuid>:4001` |
-| API | `WEB_ORIGIN` | `https://todo.example.com` |
-| Web | `API_UPSTREAM` | `http://api-<api-resource-uuid>:4000` |
+| Auth | `AUTH_DB_PASSWORD` | A strong, unique database password |
+| API | `API_DB_PASSWORD` | A strong, unique database password |
+| API | `AUTH_SERVICE_URL` | `http://todo-auth:4001` |
+| API | `WEB_ORIGIN` (optional) | `https://todo.example.com`, only when browsers call API directly |
+| Web | `API_UPSTREAM` | `http://todo-api:4000` |
 
-Assign `https://todo.example.com` to the web resource in its **Domains** setting, then use that exact origin for `WEB_ORIGIN`. Coolify’s proxy terminates TLS; the API, auth service, and databases do not receive domains or host-port mappings.
+Assign a domain to the web resource when you are ready to expose it. Caddy proxies browser `/api` requests to API internally, so they are same-origin and `WEB_ORIGIN` can remain unset. Set it to the exact public web origin only if a browser will call API directly. Coolify’s proxy terminates TLS; the API, auth service, and databases do not receive domains or host-port mappings.
 
-Coolify generates `SERVICE_PASSWORD_API_DB` and `SERVICE_PASSWORD_AUTH_DB` for the database credentials. The `api_pgdata` and `auth_pgdata` named volumes preserve data across redeployments.
-
-> Coolify magic environment variables in these manifests require Coolify v4.0.0-beta.411 or newer when deploying from a Git source.
+Set the database passwords yourself in Coolify; each value is used both to initialize its PostgreSQL service and to construct the corresponding app’s `DATABASE_URL`. The `api_pgdata` and `auth_pgdata` named volumes preserve data across redeployments.
 
 ## Architecture
 
